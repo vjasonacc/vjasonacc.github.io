@@ -1,1 +1,671 @@
-hello world
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HK · Cross‑Border Data Story | Smart Borders & Recovery</title>
+    <!-- Chart.js & Font Awesome -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- border_data.js (unchanged) -->
+    <script src="index_files/border_data.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #F4F8FC; 
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.5;
+            color: #1A2E40;
+            padding: 30px 24px;
+        }
+        .dashboard { max-width: 1440px; margin: 0 auto; }
+
+        /* PROJECT HEADER */
+        .story-masthead { margin-bottom: 30px; }
+        .project-tag {
+            display: flex; align-items: center; gap: 8px; text-transform: uppercase;
+            letter-spacing: 3px; font-weight: 700; font-size: 0.9rem; color: #0063B3; margin-bottom: 16px;
+        }
+        .story-title {
+            font-size: 3.8rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em;
+            color: #0A2540; max-width: 1000px;
+        }
+        .story-subhead {
+            font-size: 1.3rem; color: #3A5E7E; margin: 18px 0 28px; font-weight: 400;
+            border-left: 6px solid #0063B3; padding-left: 28px;
+        }
+        .hero-stats { display: flex; flex-wrap: wrap; gap: 24px; }
+        .stat-badge {
+            background: white; border-radius: 60px; padding: 12px 28px;
+            box-shadow: 0 6px 14px rgba(0,20,40,0.04); border: 1px solid #E2EAF3; font-weight: 600;
+        }
+
+        /* FILTER PANEL */
+        .filter-panel {
+            background: white; border-radius: 32px; padding: 24px 30px; margin: 40px 0 48px;
+            box-shadow: 0 12px 30px -8px rgba(0,35,70,0.06); border: 1px solid #E5EDF5;
+            display: flex; flex-wrap: wrap; align-items: flex-end; gap: 24px;
+        }
+        .filter-group { flex: 1 1 200px; }
+        .filter-label {
+            font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+            color: #2C4C6E; margin-bottom: 8px;
+        }
+        .filter-select {
+            width: 100%; padding: 12px 18px; border: 1.5px solid #D4E0EA; border-radius: 20px;
+            background: #FAFDFF; font-size: 0.95rem; font-weight: 500;
+        }
+        .filter-select:focus { border-color: #0063B3; box-shadow: 0 0 0 4px rgba(0,99,179,0.06); outline: none; }
+        .direction-badge {
+            background: #E1EEFB; border-radius: 30px; padding: 8px 20px; font-weight: 600;
+            color: #004b8f; display: inline-flex; align-items: center; gap: 8px;
+        }
+
+        /* CHAPTER CARDS */
+        .chapter {
+            background: white; border-radius: 48px; padding: 40px 40px; margin-bottom: 48px;
+            box-shadow: 0 20px 40px -10px rgba(0,30,60,0.06); border: 1px solid #EAF0F6;
+        }
+        .chapter-header {
+            display: flex; align-items: center; margin-bottom: 28px; flex-wrap: wrap;
+        }
+        .chapter-number {
+            background: #0A2540; color: white; width: 64px; height: 64px; border-radius: 24px;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; margin-right: 24px;
+        }
+        .chapter-title { font-size: 2.2rem; font-weight: 700; color: #0A2540; }
+        .chapter-question {
+            background: #FFF3D3; padding: 10px 24px; border-radius: 40px; font-weight: 700;
+            color: #0A2540; margin-left: auto; font-size: 1.1rem;
+        }
+        .chapter-question i { color: #F4B836; margin-right: 8px; }
+
+        /* KPI */
+        .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; margin-bottom: 40px; }
+        .kpi-card {
+            background: #F9FDFF; border-radius: 28px; padding: 28px 20px; text-align: center;
+            border: 1px solid #D9E8F4;
+        }
+        .kpi-value { font-size: 3rem; font-weight: 800; color: #003C71; line-height: 1.1; }
+        .kpi-label { color: #2C5778; font-weight: 600; margin-top: 12px; }
+        .kpi-sub { font-size: 1rem; color: #5A7F9C; margin-left: 6px; font-weight: 400; }
+
+        /* CHARTS */
+        .chart-double { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .chart-card {
+            background: #FFFFFF; border-radius: 28px; padding: 20px 20px 12px; border: 1px solid #E2EAF3;
+        }
+        .chart-head {
+            font-weight: 700; font-size: 1.3rem; margin-bottom: 16px; display: flex;
+            align-items: center; gap: 10px; color: #1E3B5C;
+        }
+        .chart-container {
+            height: 260px; position: relative; display: flex; align-items: center; justify-content: center;
+        }
+        .chart-container canvas {
+            max-width: 100%; max-height: 100%; width: auto !important; height: auto !important;
+        }
+        .percentage-legend {
+            display: flex; justify-content: center; gap: 24px; margin-top: 16px; font-weight: 600; flex-wrap: wrap;
+        }
+        .legend-dot { display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin-right: 8px; }
+
+        /* STORY NARRATIVE */
+        .story-narrative {
+            margin-top: 36px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 30px;
+            background: #F5FAFF;
+            border-radius: 32px;
+            padding: 28px 30px;
+        }
+        .bullet-item { display: flex; gap: 16px; margin-bottom: 24px; }
+        .bullet-icon {
+            min-width: 38px; height: 38px; background: #0063B3; color: white;
+            border-radius: 16px; display: flex; align-items: center; justify-content: center; font-weight: 800;
+        }
+        .highlight { background: #FFEDC9; padding: 4px 14px; border-radius: 40px; font-weight: 700; }
+        
+        .news-stack { display: flex; flex-direction: column; gap: 22px; }
+        .news-card-big {
+            background: white; border-radius: 28px; padding: 18px 18px 14px;
+            border: 1px solid #D0E2F0; box-shadow: 0 6px 12px rgba(0,0,0,0.02);
+        }
+        .img-btn {
+            cursor: zoom-in;
+            transition: opacity 0.2s;
+        }
+        .img-btn:hover { opacity: 0.85; }
+        .news-img-big {
+            width: 100%;
+            border-radius: 22px;
+            margin: 12px 0 8px;
+            border: 1px solid #C2D8EC;
+            aspect-ratio: 16 / 10;
+            object-fit: cover;
+        }
+        .news-link { color: #0063B3; font-weight: 700; text-decoration: none; }
+
+        /* LIGHTBOX (modal) */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(6px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        .lightbox.active { display: flex; }
+        .lightbox-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 32px;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.4);
+            border: 2px solid white;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 30px; right: 40px;
+            font-size: 3rem;
+            color: white;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .pbi-tabs { display: none; }
+        .tab-pane { display: block !important; }
+
+        @media (max-width: 900px) {
+            .story-title { font-size: 2.8rem; }
+            .kpi-grid { grid-template-columns: repeat(2,1fr); }
+            .chart-double { grid-template-columns: 1fr; }
+            .story-narrative { grid-template-columns: 1fr; }
+            .chapter-question { margin-left: 0; margin-top: 16px; width: 100%; }
+        }
+        .attribution { font-size: 0.7rem; color: #5F7D9C; margin-top: 8px; }
+        .rec-card {
+            background: #F0F7FF;
+            border-radius: 24px;
+            padding: 24px;
+            border-left: 8px solid #0063B3;
+            margin: 20px 0;
+        }
+        .two-col-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <!-- HEADER -->
+    <div class="story-masthead">
+        <div class="project-tag">
+            <i class="fas fa-database"></i> <span>Data Story Project · Hong Kong SAR</span>
+            <i class="fas fa-arrow-right"></i> <span>2021 – 2026 · Departures focus</span>
+        </div>
+        <div class="story-title">
+            <br> What Drove the Recovery of Hong Kong’s Cross-Border Passenger Flow (2021–2026)?
+        </div>
+        <div class="story-subhead">
+            A data‑driven narrative of border recovery, port concentration, and smart border solutions.
+        </div>
+        <div class="hero-stats">
+            <div class="stat-badge"><i class="fas fa-users"></i> 388.7M departures</div>
+            <div class="stat-badge"><i class="fas fa-chart-line"></i> 72.6% HK residents</div>
+            <div class="stat-badge"><i class="fas fa-calendar"></i> 5.43M Easter/Qingming '26 est.</div>
+        </div>
+    </div>
+
+    <!-- FILTERS (direction fixed) -->
+    <div class="filter-panel">
+        <div class="filter-group">
+            <div class="filter-label"><i class="far fa-calendar-alt"></i> Month (multi)</div>
+            <select id="monthFilter" class="filter-select" multiple size="3">
+                <option value="All" selected>All Months</option>
+            </select>
+            <div style="font-size:0.75rem; margin-top:6px;">Hold Ctrl/Cmd for multi‑select</div>
+        </div>
+        <div class="filter-group">
+            <div class="filter-label"><i class="fas fa-arrow-right"></i> Direction</div>
+            <select id="dirFilter" class="filter-select" multiple size="3">
+                <option value="Departure" selected>Departure (HK → Mainland China)</option>
+            </select>
+            <div class="direction-badge"><i class="fas fa-check-circle"></i> Departure only (story focus)</div>
+        </div>
+        <div class="filter-group">
+            <div class="filter-label"><i class="fas fa-map-pin"></i> Control Point</div>
+            <select id="pointFilter" class="filter-select" multiple size="3">
+                <option value="All" selected>All Control Points</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- CHAPTER 1 : OVERVIEW -->
+    <div class="chapter">
+        <div class="chapter-header">
+            <div class="chapter-number">1</div>
+            <div class="chapter-title">Volume & composition · post‑pandemic rebound</div>
+            <div class="chapter-question"><i class="fas fa-question-circle"></i> Who's crossing the border most?</div>
+        </div>
+        <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">Total departures</div><div class="kpi-value"><span id="kpi-total">388.7M</span></div></div>
+            <div class="kpi-card"><div class="kpi-label">HK Residents</div><div class="kpi-value"><span id="kpi-hk">282.1M</span></div><div class="kpi-label">72.6% · main driver</div></div>
+            <div class="kpi-card"><div class="kpi-label">Mainland Visitors</div><div class="kpi-value"><span id="kpi-mainland">96.4M</span></div><div class="kpi-label">24.8%</div></div>
+            <div class="kpi-card"><div class="kpi-label">Other Visitors</div><div class="kpi-value"><span id="kpi-other">10.2M</span></div><div class="kpi-label">2.6%</div></div>
+        </div>
+        <div class="chart-double">
+            <div class="chart-card">
+                <div class="chart-head"><i class="fas fa-chart-line"></i> Departures over time</div>
+                <div class="chart-container"><canvas id="tab1-trend"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-head"><i class="fas fa-chart-pie"></i> Traveller mix</div>
+                <div class="chart-container"><canvas id="tab1-composition"></canvas></div>
+                <div id="pie1-legend" class="percentage-legend"></div>
+            </div>
+        </div>
+        <div class="story-narrative">
+            <div class="bullet-list">
+                <div class="bullet-item"><span class="bullet-icon">1</span><div><strong>2021–2022 pandemic collapse</strong> — border closures kept traffic near zero. COVID‑19 restrictions primary driver.</div></div>
+                <div class="bullet-item"><span class="bullet-icon">2</span><div><strong>Recovery driven by lifting restrictions</strong> — post‑2022 rebound, reaching <span class="highlight">5.43M trips (Easter/Qingming 2026 est.)</span>.</div></div>
+                <div class="bullet-item"><span class="bullet-icon">3</span><div><strong>HK residents dominate (over 60%)</strong> — mainland consumption (shopping, leisure, commuting) fuels growth.</div></div>
+            </div>
+            <div class="news-stack">
+                <div class="news-card-big">
+                    <i class="fas fa-newspaper"></i> <strong>Reuters · border reopening</strong>
+                    <img class="news-img-big img-btn" src="https://picture01.52hrttpic.com/image/infoImage/202303/20/D1678954490481.jpeg" alt="Lo Wu reopening crowds">
+                    <a class="news-link" href="https://www.reuters.com/world/china/china-reopen-borders-including-with-hong-kong-after-3-years-2023-01-06/" target="_blank">Jan 2023: China reopens borders after 3 years</a>
+                </div>
+                <div class="news-card-big">
+                    <i class="fas fa-image"></i> <strong>HK01 · border crowd</strong>
+                    <img class="news-img-big img-btn" src="https://cdn.hk01.com/di/media/images/dw/20230108/688759315930681344406285.jpeg/J5EfLtSb_3jIFG-8wMGi0ayGbItQW5kN4TQsyPQ0LMg?v=w1920r16_9" alt="Hong Kong border crowds">
+                    <a class="news-link" href="https://www.hk01.com/%E7%A4%BE%E6%9C%83%E6%96%B0%E8%81%9E/852777/%E9%80%9A%E9%97%9C%E5%85%A7%E5%9C%B0%E6%94%BB%E7%95%A5-%E6%9C%80%E5%BF%AB1-8%E5%85%8D%E6%AA%A2%E5%87%BA%E5%85%A5%E5%A2%83-%E9%80%9A%E9%97%9C-%E4%B8%89%E5%AF%B6-%E7%BC%BA%E4%B8%80%E4%B8%8D%E5%8F%AF" target="_blank">Jan 2023: China reopens borders after 3 years</a>
+
+                    <span class="attribution">HK01 · Jan 2023 reopening</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHAPTER 2 : MONTHLY TREND -->
+    <div class="chapter">
+        <div class="chapter-header">
+            <div class="chapter-number">2</div>
+            <div class="chapter-title">Monthly rhythms & holiday surges</div>
+            <div class="chapter-question"><i class="fas fa-question-circle"></i> When do Hongkongers rush to Shenzhen?</div>
+        </div>
+        <div class="chart-card" style="margin-bottom:30px;"><div class="chart-head">Monthly departures</div><div class="chart-container"><canvas id="tab2-monthly-trend"></canvas></div></div>
+        <div class="chart-double">
+            <div class="chart-card"><div class="chart-head">Stacked composition</div><div class="chart-container"><canvas id="tab2-composition"></canvas></div></div>
+            <div class="chart-card"><div class="chart-head">Top 5 peak months</div><div class="chart-container"><canvas id="tab2-peak"></canvas></div></div>
+        </div>
+        <div class="story-narrative">
+            <div class="bullet-list">
+                <div class="bullet-item"><span class="bullet-icon">📈</span><div><strong>Easter / Qingming 2026 forecast: 5.43 million departures</strong> — highest since reopening.</div></div>
+                <div class="bullet-item"><span class="bullet-icon">📊</span><div>Monthly data shows clear seasonal spikes; HK resident volume leads every month.</div></div>
+            </div>
+            <div class="news-stack">
+                <div class="news-card-big">
+                    <i class="fas fa-camera"></i> <strong>SCMP · Easter 2025 rush</strong>
+                    <img class="news-img-big img-btn" src="https://cdn.i-scmp.com/sites/default/files/styles/1200x800/public/d8/images/canvas/2025/04/18/37abd49d-f50a-40e6-b2fd-28a11d4b6d68_bb2eb9be.jpg?itok=bXM1MhzV&v=1744977672" alt="Easter holiday crowds">
+                    <a class="news-link" href="https://www.scmp.com/news/hong-kong/hong-kong-economy/article/3307025/crowds-pack-hong-kong-land-checkpoints-250000-leave-city-easter-holiday" target="_blank">SCMP: 705,000 trips on first day of Easter</a>
+                </div>
+                <div class="news-card-big">
+                    <i class="fas fa-train"></i> <strong>SCMP · May 2025 checkpoint</strong>
+                    <img class="news-img-big img-btn" src="https://cdn.i-scmp.com/sites/default/files/styles/1200x800/public/d8/images/canvas/2025/05/03/9650aa8d-1e71-4af2-8d7a-f43e98442465_f450b1b3.jpg?itok=XGDQeRcY&v=1746248751" alt="May 2025 border">
+                    <a class="news-link" href="https://www.scmp.com/news/hong-kong/transport/article/3308936/hong-kongs-mtr-corp-boost-internet-capacity-after-golden-week-ticket-chaos" target="_blank">SCMP: MTR boosts internet after Golden Week chaos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHAPTER 3 : PORT CONCENTRATION -->
+    <div class="chapter">
+        <div class="chapter-header">
+            <div class="chapter-number">3</div>
+            <div class="chapter-title">Port concentration (Departures)</div>
+            <div class="chapter-question"><i class="fas fa-question-circle"></i> Which border crossing is the busiest?</div>
+        </div>
+        <div class="chart-double">
+            <div class="chart-card">
+                <div class="chart-head">Share by control point</div>
+                <div class="chart-container"><canvas id="tab3-distribution"></canvas></div>
+                <div id="pie2-legend" class="percentage-legend"></div>
+            </div>
+            <div class="chart-card"><div class="chart-head">Top 5 busiest (horizontal)</div><div class="chart-container"><canvas id="tab3-top5"></canvas></div></div>
+        </div>
+        <div class="chart-card" style="margin-top:30px;"><div class="chart-head">Departure volume (top ports)</div><div class="chart-container"><canvas id="tab3-direction"></canvas></div></div>
+        <div class="story-narrative">
+            <div class="bullet-list">
+                <div class="bullet-item"><span class="bullet-icon">🚉</span><div><strong>Lo Wu & Lok Ma Chau Spur Line account for ~48%</strong> of all departures — direct East Rail connection.</div></div>
+                <div class="bullet-item"><span class="bullet-icon">📍</span><div>Passenger flow highly concentrated; infrastructure shapes spatial distribution.</div></div>
+                <div class="bullet-item"><span class="bullet-icon">⚖️</span><div> Hong Kong-Zhuhai-Macao Bridge and Express Rail Link West Kowloon underutilized – opportunity for diversion.</div></div>
+            </div>
+            <div class="news-stack">
+                <div class="news-card-big">
+                    <i class="fas fa-wifi"></i> <strong>HK01 · Lok Ma Chau Wi‑Fi chaos</strong>
+                    <img class="news-img-big img-btn" src="https://cdn.hk01.com/di/media/images/dw/20250503/995481495776792576504261.jpeg/u7W_M04phhPuo1M2aUrIwzGU2hIwX2L5YJHYLmCR2C4?v=w1280r16_9" alt="Lok Ma Chau Wi-Fi issue">
+                    <a class="news-link" href="https://www.hk01.com/%E7%A4%BE%E6%9C%83%E6%96%B0%E8%81%9E/60234997/%E4%BA%94%E4%B8%80%E7%A6%8F%E7%94%B0%E5%8F%A3%E5%B2%B8-%E8%90%BD%E9%A6%AC%E6%B4%B2%E7%AB%99%E4%BA%BA%E5%A4%9A%E6%90%B6%E7%88%86wi-fi-%E5%91%A8%E4%BA%94%E6%99%9A%E4%B8%80%E5%BA%A6%E6%AF%8B%E9%A0%88%E6%8B%8D%E5%8D%A1%E5%87%BA%E9%96%98" target="_blank">HK01 News report about Border 5G/4GLTE Wifi issues</a>
+                </div>
+                <div class="news-card-big">
+                    <i class="fas fa-road"></i> <strong>The Heung Yuen Wai Boundary Control Point was packed with people on weekends, with passenger flow exceeding the planned capacity by three times. The Immigration Department added counters to help manage passenger flow.</strong>
+                    <img class="news-img-big img-btn" src="https://cdn.hk01.com/di/media/images/dw/20250823/1035966366353461248039871.jpeg/E2Kc6Q-_JomRw-1I1hfD_LfB9G1OdtjQCocNswqHDbM?v=w1280r16_9" alt="Heung Yuen Wai">
+                    <a class="news-link" href="https://www.hk01.com/%E7%A4%BE%E6%9C%83%E6%96%B0%E8%81%9E/60234997/%E4%BA%94%E4%B8%80%E7%A6%8F%E7%94%B0%E5%8F%A3%E5%B2%B8-%E8%90%BD%E9%A6%AC%E6%B4%B2%E7%AB%99%E4%BA%BA%E5%A4%9A%E6%90%B6%E7%88%86wi-fi-%E5%91%A8%E4%BA%94%E6%99%9A%E4%B8%80%E5%BA%A6%E6%AF%8B%E9%A0%88%E6%8B%8D%E5%8D%A1%E5%87%BA%E9%96%98" target="_blank">HK01 News report about Heung Yuen Wai Boundary Control Point was packed with people on weekends, exceeding the planned capacity by three times</a> <br
+
+                    <span>Hong Kong-Zhuhai-Macao Bridge and Express Rail Link West Kowloon · underutilized alternative</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHAPTER 4 : WEATHER & EXCHANGE -->
+    <div class="chapter">
+        <div class="chapter-header">
+            <div class="chapter-number">4</div>
+            <div class="chapter-title">External factors · weak but observable</div>
+            <div class="chapter-question"><i class="fas fa-question-circle"></i> Does rain or FX really change behaviour?</div>
+        </div>
+        <div class="chart-double">
+            <div class="chart-card"><div class="chart-head">Temperature vs departures</div><div class="chart-container"><canvas id="tab4-temperature"></canvas></div></div>
+            <div class="chart-card"><div class="chart-head">Rainfall vs departures</div><div class="chart-container"><canvas id="tab4-rainfall"></canvas></div></div>
+        </div>
+        <div class="chart-card"><div class="chart-head">Exchange rate (HKD/RMB) vs volume</div><div class="chart-container"><canvas id="tab4-exchange"></canvas></div></div>
+        <div class="story-narrative">
+            <div class="bullet-list">
+                <div class="bullet-item"><span class="bullet-icon">🌧️</span><div><strong>Rainfall: short‑term disruptor</strong> — heavy rain (>500mm) reduces flow temporarily, no long‑term correlation.</div></div>
+                <div class="bullet-item"><span class="bullet-icon">💱</span><div><strong>Exchange rate: weak explanatory power</strong> — secondary factor; structural trends dominate.</div></div>
+            </div>
+            <div class="news-stack">
+                <div class="news-card-big">
+                    <i class="fas fa-cloud-rain"></i> <strong>HKO · rain radar</strong>
+                    <!-- <img class="news-img-big img-btn" src="https://www.weather.gov.hk/wxinfo/currwx/current/images/rain_radar.jpg" alt="Rain radar"> -->
+                    <span>Hong Kong Observatory rain radar</span>
+                </div>
+                <div class="news-card-big">
+                    <i class="fas fa-chart-line"></i> <strong>HKMA · RMB exchange</strong>
+                    <!-- <img class="news-img-big img-btn" src="https://www.hkma.gov.hk/media/eng/doc/key-information/press-release/2023/20230126e1.jpg" alt="Exchange rate"> -->
+                    <span>HKMA · HKD/RMB reference</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHAPTER 5 : INSIGHTS & FULL DATA STORY -->
+    <div class="chapter">
+        <div class="chapter-header">
+            <div class="chapter-number">5</div>
+            <div class="chapter-title">Strategic takeaways </div>
+            <div class="chapter-question"><i class="fas fa-question-circle"></i> What should border management do next?</div>
+        </div>
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:32px;">
+            <div>
+                <div style="font-size:1.4rem; font-weight:600; margin-bottom:20px;">The main pressure is concentrated demand, not weather or Exchange rate.</div>
+                <ul style="list-style:none;">
+                    <li style="margin-bottom:18px;"><i class="fas fa-check-circle" style="color:#0063B3;margin-right:14px;"></i> <strong>Prioritize popular ports:</strong> Lo Wu, Lok Ma Chau, Shenzhen Bay, West Kowloon — intelligent crowd monitoring.</li>
+                    <li style="margin-bottom:18px;"><i class="fas fa-check-circle" style="color:#0063B3;margin-right:14px;"></i> <strong>Redirect to secondary ports:</strong> Promote Heung Yuen Wai and Hong Kong‑Zhuhai‑Macao Bridge.</li>
+                    <li style="margin-bottom:18px;"><i class="fas fa-check-circle" style="color:#0063B3;margin-right:14px;"></i> <strong>Short‑term weather planning:</strong> Use rainfall forecasts for emergency resource allocation.</li>
+                </ul>
+            </div>
+            <div style="background:#E1EEFB; border-radius:32px; padding:28px;">
+                <i class="fas fa-microchip" style="font-size:2rem;"></i>
+                <h3>Full story recap</h3>
+                <p><strong>2021–2026:</strong> Recovery driven by HK residents (>60%), concentrated at East Rail ports. Rainfall & FX are secondary.</p>
+                <span class="highlight" style="margin-top:18px; display:inline-block;">5.43M Easter/Qingming '26</span>
+            </div>
+        </div>
+        <div style="margin-top:40px; background:#F5FAFF; border-radius:32px; padding:28px;">
+            <h3><i class="fas fa-list-ul"></i> More information:</h3>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px;">
+                <div>• 2021‑2022 pandemic collapse — border closures.</div>
+                <div>• Recovery driven by reopening; 5.43M Easter '26.</div>
+                <div>• HK residents >60% (shopping/leisure).</div>
+                <div>• Lo Wu+Lok Ma Chau Spur ~48% (East Rail).</div>
+                <div>• Rainfall: short‑term disruptor only.</div>
+                <div>• Exchange rate weak explanatory power.</div>
+                <div>• Priority: smart crowd systems at top ports.</div>
+                <div>• Redirect to Heung Yuen Wai / HZMB.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW CHAPTER 6 : SMART BORDER RECOMMENDATIONS (Joint inspection、 one-time clearance + Face ID) -->
+    <div class="chapter">
+        <div class="chapter-header">
+            <div class="chapter-number">6</div>
+            <div class="chapter-title">Smart border management · Joint inspection、 one-time clearance</div>
+            <div class="chapter-question"><i class="fas fa-question-circle"></i> How to speed up crossing?</div>
+        </div>
+        <div class="rec-card">
+            <h3 style="display:flex; gap:12px; margin-bottom:20px;"><i class="fas fa-microchip"></i> Intelligent crowd monitoring & predictive systems</h3>
+            <p>Deploy real‑time cameras and AI analytics at Lo Wu, Lok Ma Chau, Shenzhen Bay and West Kowloon to forecast queue lengths and trigger dynamic lane allocation.</p>
+        </div>
+        <div class="two-col-list">
+            <div class="rec-card" style="margin:0;">
+                <h4><i class="fas fa-handshake"></i> Cooperative inspection, one‑time release</h4>
+                <p><strong>Joint inspection、 one-time clearance</strong> — a single checkpoint where HK and mainland officers work side‑by‑side. Travellers present document only once. Already piloted at Shenzhen Bay; should expand to all major ports.</p>
+            </div>
+            <div class="rec-card" style="margin:0;">
+                <h4><i class="fas fa-face-smile"></i> Face ID / facial recognition</h4>
+                <p>Replace manual ID checks with contactless facial recognition e‑gates. Reduces processing time per passenger by 40% and eliminates card‑scanning bottlenecks.</p>
+            </div>
+        </div>
+        <div class="story-narrative" style="margin-top:32px;">
+            <div class="bullet-list">
+                <div class="bullet-item"><span class="bullet-icon">🚦</span><div><strong>Channel arrangements & queue management</strong> — priority lanes for frequent travellers; dynamic signage.</div></div>
+                <div class="bullet-item"><span class="bullet-icon">🚌</span><div><strong>Transportation connections</strong> — better MTR frequency, dedicated shuttle buses to Heung Yuen Wai.</div></div>
+                <div class="bullet-item"><span class="bullet-icon">📱</span><div><strong>Wi‑Fi & mobile network</strong> — prevent connectivity chaos (see HK01 report) for e‑payment and health codes.</div></div>
+            </div>
+            <div class="news-stack">
+                <div class="news-card-big">
+                    <i class="fas fa-id-card"></i> <strong>Cooperative inspection pilot</strong>
+                    <img class="news-img-big img-btn" src="https://statics.exmoo.com/uploads/2021-08-31/ro1TfsgP5gRVZkY822Oa.jpg" alt="Shenzhen Bay cooperative inspection">
+                    <span>Macao special administrative region , Qingmao Port adopts Joint inspection one-time clearance pilot</span>
+                </div>
+                <div class="news-card-big">
+                    <i class="fas fa-camera"></i> <strong>Face recognition e‑gate</strong>
+                    <img class="news-img-big img-btn" src="https://newsstatic.rthk.hk/images/mfile_1825208_1_20250929164621.jpg" alt="e-Channel face recognition">
+                    <span>ImmD e‑Channel with facial recognition.  The HK airport arrival hall will launch the "Easy Fly e-Channel" tomorrow, allowing Hong Kong residents to use facial recognition for self-service immigration clearance. </span>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:28px; background:#E9F2FA; border-radius:28px; padding:22px;">
+            <p><i class="fas fa-lightbulb" style="color:#F4B836; margin-right:12px;"></i> <strong>Conclusion:</strong> Combining data‑driven crowd prediction, cooperative inspection, and facial recognition can reduce peak wait times by up to 50% while smoothing passenger flow across all ports.</p>
+            <p><i class="fas fa-lightbulb" style="color:#F4B836; margin-right:12px;"></i> <strong>Reference:</strong> <br> Data.gov.hk, HK01 News, iCable News, Now TV News, TVB News, www.immd.gov.hk, news.gov.hk</p>
+            <p><i class="fas fa-lightbulb" style="color:#F4B836; margin-right:12px;"></i> <strong></strong>Last update 2026 April 12 2.56PM</p>
+
+
+        </div>
+    </div>
+</div>
+
+<!-- LIGHTBOX MODAL -->
+<div class="lightbox" id="lightbox">
+    <span class="lightbox-close" id="lightboxClose">&times;</span>
+    <img class="lightbox-content" id="lightboxImg" src="" alt="enlarged view">
+</div>
+
+<script>
+    (function(){
+        // ---- utility ----
+        function formatLargeNumber(num) {
+            if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+            if (num >= 1e3) return (num / 1e3).toFixed(0) + 'K';
+            return num.toString();
+        }
+
+        function groupBy(array, key) {
+            return array.reduce((result, item) => {
+                const groupKey = item[key];
+                const existingGroup = result.find(group => group.key === groupKey);
+                if (existingGroup) { existingGroup.items.push(item); }
+                else { result.push({ key: groupKey, items: [item] }); }
+                return result;
+            }, []);
+        }
+        function getMultiSelectValues(selectId) {
+            const select = document.getElementById(selectId);
+            const values = Array.from(select.selectedOptions).map(opt => opt.value);
+            return values.includes('All') ? ['All'] : values;
+        }
+
+        function populateFilters() {
+            const monthSelect = document.getElementById('monthFilter');
+            const pointSelect = document.getElementById('pointFilter');
+            if (!rawData || !rawData.border) return;
+            const months = [...new Set(rawData.border.map(d => d.YearMonth))].sort();
+            months.forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.textContent = m; monthSelect.appendChild(opt); });
+            const points = [...new Set(rawData.border.map(d => d.ControlPoint))].sort();
+            points.forEach(p => { const opt = document.createElement('option'); opt.value = p; opt.textContent = p; pointSelect.appendChild(opt); });
+        }
+
+        function getFilteredData() {
+            if (!rawData || !rawData.border) return [];
+            const selectedMonths = getMultiSelectValues('monthFilter');
+            const selectedDirs = getMultiSelectValues('dirFilter');
+            const selectedPoints = getMultiSelectValues('pointFilter');
+            let filtered = rawData.border;
+            if (!selectedMonths.includes('All')) filtered = filtered.filter(d => selectedMonths.includes(d.YearMonth));
+            if (!selectedDirs.includes('All')) filtered = filtered.filter(d => selectedDirs.includes(d.Direction));
+            if (!selectedPoints.includes('All')) filtered = filtered.filter(d => selectedPoints.includes(d.ControlPoint));
+            return filtered;
+        }
+
+        const charts = {};
+        const portColors = ['#0063B3', '#00B894', '#FDCB6E', '#E17055', '#74B9FF', '#A29BFE', '#FD79A8', '#55A7DC'];
+
+        function updatePercentageLegend(elementId, labels, data, colors) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const total = data.reduce((a,b)=>a+b,0);
+            let html = '';
+            labels.forEach((label, i) => {
+                const value = data[i];
+                const pct = ((value / total)*100).toFixed(1);
+                html += `<div><span class="legend-dot" style="background:${colors[i]}"></span> ${label}: ${pct}%</div>`;
+            });
+            el.innerHTML = html;
+        }
+
+        function updateKPIs() {
+            const data = getFilteredData();
+            const total = data.reduce((s,i)=>s+i.Total,0);
+            const hk = data.reduce((s,i)=>s+i.HK_Residents,0);
+            const ml = data.reduce((s,i)=>s+i.Mainland_Visitors,0);
+            const ot = data.reduce((s,i)=>s+i.Other_Visitors,0);
+            document.getElementById('kpi-total').textContent = formatLargeNumber(total);
+            document.getElementById('kpi-hk').textContent = formatLargeNumber(hk);
+            document.getElementById('kpi-mainland').textContent = formatLargeNumber(ml);
+            document.getElementById('kpi-other').textContent = formatLargeNumber(ot);
+        }
+
+        function renderAllCharts() {
+            const data = getFilteredData();
+            if (!data.length) return;
+            const monthGroups = groupBy(data, 'YearMonth').sort((a,b)=>new Date(a.key)-new Date(b.key));
+            const monthLabels = monthGroups.map(g=>g.key);
+            const monthTotals = monthGroups.map(g=>g.items.reduce((s,i)=>s+i.Total,0));
+
+            if (charts.tab1Trend) charts.tab1Trend.destroy();
+            charts.tab1Trend = new Chart(document.getElementById('tab1-trend').getContext('2d'), { type:'line', data:{labels:monthLabels, datasets:[{label:'Departures', data:monthTotals, borderColor:'#0063B3', backgroundColor:'rgba(0,99,179,0.05)', fill:true}]}, options:{responsive: true, maintainAspectRatio: true} });
+            
+            const hkTotal = data.reduce((s,i)=>s+i.HK_Residents,0), mlTotal = data.reduce((s,i)=>s+i.Mainland_Visitors,0), otTotal = data.reduce((s,i)=>s+i.Other_Visitors,0);
+            const pie1Data = [hkTotal, mlTotal, otTotal];
+            const pie1Labels = ['HK Residents', 'Mainland Visitors', 'Other'];
+            if (charts.tab1Comp) charts.tab1Comp.destroy();
+            charts.tab1Comp = new Chart(document.getElementById('tab1-composition').getContext('2d'), { type:'pie', data:{labels:pie1Labels, datasets:[{data:pie1Data, backgroundColor:['#0063B3','#00B894','#FDCB6E']}]}, options:{responsive: true, maintainAspectRatio: true} });
+            updatePercentageLegend('pie1-legend', pie1Labels, pie1Data, ['#0063B3','#00B894','#FDCB6E']);
+
+            if (charts.tab2Monthly) charts.tab2Monthly.destroy();
+            charts.tab2Monthly = new Chart(document.getElementById('tab2-monthly-trend').getContext('2d'), { type:'bar', data:{labels:monthLabels, datasets:[{data:monthTotals, backgroundColor:'#0063B3'}]}, options:{maintainAspectRatio:true}});
+            const hkMonthly = monthGroups.map(g=>g.items.reduce((s,i)=>s+i.HK_Residents,0));
+            const mlMonthly = monthGroups.map(g=>g.items.reduce((s,i)=>s+i.Mainland_Visitors,0));
+            if (charts.tab2Comp) charts.tab2Comp.destroy();
+            charts.tab2Comp = new Chart(document.getElementById('tab2-composition').getContext('2d'), { type:'bar', data:{labels:monthLabels, datasets:[{label:'HK',data:hkMonthly,backgroundColor:'#0063B3'},{label:'Mainland',data:mlMonthly,backgroundColor:'#00B894'}]}, options:{scales:{x:{stacked:true},y:{stacked:true}}, maintainAspectRatio:true}});
+            const peak = [...monthGroups].sort((a,b)=>b.items.reduce((s,i)=>s+i.Total,0)-a.items.reduce((s,i)=>s+i.Total,0)).slice(0,5);
+            if (charts.tab2Peak) charts.tab2Peak.destroy();
+            charts.tab2Peak = new Chart(document.getElementById('tab2-peak').getContext('2d'), { type:'bar', data:{labels:peak.map(g=>g.key), datasets:[{data:peak.map(g=>g.items.reduce((s,i)=>s+i.Total,0)), backgroundColor:'#E17055'}]}, options:{maintainAspectRatio:true}});
+
+            const pointGroups = groupBy(data, 'ControlPoint');
+            const pointLabels = pointGroups.map(g=>g.key), pointTotals = pointGroups.map(g=>g.items.reduce((s,i)=>s+i.Total,0));
+            if (charts.tab3Dist) charts.tab3Dist.destroy();
+            charts.tab3Dist = new Chart(document.getElementById('tab3-distribution').getContext('2d'), { type:'pie', data:{labels:pointLabels, datasets:[{data:pointTotals, backgroundColor: portColors.slice(0, pointLabels.length)}]}, options:{responsive: true, maintainAspectRatio: true}});
+            updatePercentageLegend('pie2-legend', pointLabels, pointTotals, portColors.slice(0, pointLabels.length));
+            
+            const top5 = pointGroups.sort((a,b)=>b.items.reduce((s,i)=>s+i.Total,0)-a.items.reduce((s,i)=>s+i.Total,0)).slice(0,5);
+            if (charts.tab3Top) charts.tab3Top.destroy();
+            charts.tab3Top = new Chart(document.getElementById('tab3-top5').getContext('2d'), { type:'bar', data:{labels:top5.map(g=>g.key), datasets:[{data:top5.map(g=>g.items.reduce((s,i)=>s+i.Total,0)), backgroundColor: portColors.slice(0,5)}]}, options:{indexAxis:'y', maintainAspectRatio:true}});
+            const dep = top5.map(g=>g.items.reduce((s,i)=>s+i.Total,0));
+            if (charts.tab3Dir) charts.tab3Dir.destroy();
+            charts.tab3Dir = new Chart(document.getElementById('tab3-direction').getContext('2d'), { type:'bar', data:{labels:top5.map(g=>g.key), datasets:[{label:'Departures',data:dep,backgroundColor:'#0063B3'}]}, options:{indexAxis:'y', maintainAspectRatio:true}});
+
+            const sorted = monthGroups;
+            const tempVals = sorted.map(g=>g.items[0].Temperature), trav = sorted.map(g=>g.items.reduce((s,i)=>s+i.Total,0));
+            if (charts.tab4Temp) charts.tab4Temp.destroy();
+            charts.tab4Temp = new Chart(document.getElementById('tab4-temperature').getContext('2d'), { type:'scatter', data:{datasets:[{data:tempVals.map((t,i)=>({x:t,y:trav[i]})), backgroundColor:'#0063B3'}]}, options:{maintainAspectRatio:true}});
+            const rainVals = sorted.map(g=>g.items[0].Rainfall);
+            if (charts.tab4Rain) charts.tab4Rain.destroy();
+            charts.tab4Rain = new Chart(document.getElementById('tab4-rainfall').getContext('2d'), { type:'scatter', data:{datasets:[{data:rainVals.map((r,i)=>({x:r,y:trav[i]})), backgroundColor:'#00B894'}]}, options:{maintainAspectRatio:true}});
+            const rateVals = sorted.map(g=>g.items[0].Exchange_Rate);
+            if (charts.tab4Rate) charts.tab4Rate.destroy();
+            charts.tab4Rate = new Chart(document.getElementById('tab4-exchange').getContext('2d'), { type:'scatter', data:{datasets:[{data:rateVals.map((r,i)=>({x:r,y:trav[i]})), backgroundColor:'#E17055'}]}, options:{maintainAspectRatio:true}});
+        }
+
+        function refreshAll() { updateKPIs(); renderAllCharts(); }
+
+        // ---- LIGHTBOX ----
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxClose = document.getElementById('lightboxClose');
+
+        function openLightbox(src) {
+            lightboxImg.src = src;
+            lightbox.classList.add('active');
+        }
+        function closeLightbox() { lightbox.classList.remove('active'); }
+
+        function attachImageListeners() {
+            document.querySelectorAll('.img-btn').forEach(img => {
+                img.removeEventListener('click', img._lightboxHandler);
+                const handler = (e) => { e.stopPropagation(); openLightbox(img.src); };
+                img._lightboxHandler = handler;
+                img.addEventListener('click', handler);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', ()=>{
+            populateFilters();
+            refreshAll();
+            attachImageListeners();
+
+            document.getElementById('monthFilter').addEventListener('change', refreshAll);
+            document.getElementById('dirFilter').addEventListener('change', refreshAll);
+            document.getElementById('pointFilter').addEventListener('change', refreshAll);
+
+            const originalRender = renderAllCharts;
+            renderAllCharts = function() {
+                originalRender();
+                setTimeout(attachImageListeners, 50);
+            };
+            window.renderAllCharts = renderAllCharts;
+
+            lightboxClose.addEventListener('click', closeLightbox);
+            lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+        });
+
+        if (typeof rawData === 'undefined') { console.warn("border_data.js missing"); window.rawData = { border: [] }; }
+
+        const origRefresh = refreshAll;
+        refreshAll = function() {
+            origRefresh();
+            setTimeout(attachImageListeners, 100);
+        };
+        window.refreshAll = refreshAll;
+    })();
+</script>
+</body>
+</html>
