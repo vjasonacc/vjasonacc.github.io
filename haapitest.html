@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HA Air Conditioner Dashboard</title>
+    <style>
+        /* ── 样式和之前完全一样 ── */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f4f6f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .app-container {
+            max-width: 580px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 12px 40px rgba(0,20,40,0.06);
+            padding: 28px 32px;
+            border: 1px solid #edf2f7;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+        .card-header .sub {
+            font-size: 13px;
+            font-weight: 400;
+            color: #94a3b8;
+            margin-left: auto;
+        }
+        .input-group {
+            margin-bottom: 16px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 5px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            font-size: 14px;
+            background: #fafcff;
+            font-family: inherit;
+            color: #0f172a;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.08);
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 15px;
+            width: 100%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .config-status {
+            margin-top: 14px;
+            font-size: 14px;
+            text-align: center;
+            padding: 8px;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #475569;
+        }
+        .config-status.success { background: #ecfdf5; color: #065f46; }
+        .config-status.error { background: #fef2f2; color: #991b1b; }
+        .state-container { display: flex; flex-direction: column; gap: 14px; }
+        .state-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .state-item:last-of-type { border-bottom: none; }
+        .state-label { font-size: 14px; font-weight: 500; color: #64748b; }
+        .state-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #0f172a;
+            background: #f8fafc;
+            padding: 4px 18px;
+            border-radius: 40px;
+            min-width: 90px;
+            text-align: center;
+        }
+        .state-value.temperature {
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 17px;
+            font-weight: 700;
+            min-width: 100px;
+        }
+        .state-value.temperature::after { content: " °C"; font-size: 13px; font-weight: 400; color: #6366f1; }
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .status-dot.on { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
+        .status-dot.off { background: #94a3b8; }
+        .status-dot.unknown { background: #f59e0b; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .loading-placeholder { text-align: center; padding: 24px 0; color: #94a3b8; }
+        .loading-placeholder .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 20px 0; color: #94a3b8; font-size: 15px; }
+        .state-footer {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .state-footer .refresh-btn {
+            background: none;
+            border: none;
+            color: #3b82f6;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 6px 16px;
+            border-radius: 40px;
+        }
+        .state-footer .refresh-btn:hover { background: #eff6ff; }
+        @media (max-width: 500px) {
+            .card { padding: 20px 16px; }
+            .state-item { flex-wrap: wrap; gap: 4px; }
+            .state-value { width: 100%; text-align: left; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <!-- 设置卡片 -->
+    <div class="card">
+        <div class="card-header">
+            <span>⚙️</span> Connection Settings
+            <span class="sub">Beta</span>
+        </div>
+        <div class="input-group">
+            <label>Home Assistant URL</label>
+            <input type="url" id="ha-url" value="https://" readonly>
+        </div>
+        <div class="input-group">
+            <label>Long-Lived Access Token</label>
+            <input type="password" id="ha-token" placeholder="Paste your token here">
+        </div>
+        <div class="input-group">
+            <label>Entity ID</label>
+            <input type="text" id="ha-entity" value="climate.frmacgree" readonly>
+        </div>
+        <button class="btn-primary" onclick="saveAndFetch()">🔌 Connect</button>
+        <div id="config-status" class="config-status">Enter your token and connect.</div>
+    </div>
+
+    <!-- 状态卡片 -->
+    <div class="card">
+        <div class="card-header">
+            <span>❄️</span> Air Conditioner
+            <span class="sub" id="entity-badge">Not connected</span>
+        </div>
+        <div id="loading-state" class="loading-placeholder" style="display:none;">
+            <div class="spinner"></div>
+            <div>Fetching state...</div>
+        </div>
+        <div id="empty-state" class="empty-state">
+            <span style="font-size:36px;display:block;margin-bottom:12px;">🔌</span>
+            Please configure the connection above.
+        </div>
+        <div id="data-state" class="state-container" style="display:none;">
+            <div class="state-item">
+                <span class="state-label">Status</span>
+                <span class="state-value" id="state-display"><span class="status-dot unknown"></span> Unknown</span>
+            </div>
+            <div class="state-item">
+                <span class="state-label">Current Temperature</span>
+                <span class="state-value temperature" id="temp-display">--</span>
+            </div>
+            <div class="state-item">
+                <span class="state-label">Target Temperature</span>
+                <span class="state-value temperature" id="target-temp-display">--</span>
+            </div>
+            <div class="state-item">
+                <span class="state-label">Fan Speed</span>
+                <span class="state-value" id="fan-display">--</span>
+            </div>
+            <div class="state-item">
+                <span class="state-label">HVAC Mode</span>
+                <span class="state-value" id="mode-display">--</span>
+            </div>
+        </div>
+        <div class="state-footer">
+            <span class="last-updated" id="last-updated">--</span>
+            <button class="refresh-btn" onclick="manualRefresh()">↻ Refresh</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // DOM 引用
+    const urlInput = document.getElementById('ha-url');
+    const tokenInput = document.getElementById('ha-token');
+    const entityInput = document.getElementById('ha-entity');
+    const configStatus = document.getElementById('config-status');
+    const loadingEl = document.getElementById('loading-state');
+    const emptyEl = document.getElementById('empty-state');
+    const dataEl = document.getElementById('data-state');
+    const badgeEl = document.getElementById('entity-badge');
+    const stateDisplay = document.getElementById('state-display');
+    const tempDisplay = document.getElementById('temp-display');
+    const targetTempDisplay = document.getElementById('target-temp-display');
+    const fanDisplay = document.getElementById('fan-display');
+    const modeDisplay = document.getElementById('mode-display');
+    const lastUpdatedEl = document.getElementById('last-updated');
+
+    let autoRefreshInterval = null;
+
+    function formatTime(iso) {
+        if (!iso) return '--';
+        try { return new Date(iso).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
+        catch { return '--'; }
+    }
+    function capitalize(str) {
+        if (!str) return '--';
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    function showConfigStatus(msg, type='info') {
+        configStatus.textContent = msg;
+        configStatus.className = 'config-status';
+        if (type === 'success') configStatus.classList.add('success');
+        if (type === 'error') configStatus.classList.add('error');
+    }
+    function saveConfig(url, token, entity) {
+        if (url) localStorage.setItem('ha_url', url.trim());
+        if (token) localStorage.setItem('ha_token', token.trim());
+        if (entity) localStorage.setItem('ha_entity', entity.trim());
+    }
+    function loadConfig() {
+        const u = localStorage.getItem('ha_url');
+        const t = localStorage.getItem('ha_token');
+        const e = localStorage.getItem('ha_entity');
+        if (u) urlInput.value = u;
+        if (t) tokenInput.value = t;
+        if (e) entityInput.value = e;
+    }
+
+    async function fetchState(showLoading = true) {
+        const url = urlInput.value.trim();
+        const token = tokenInput.value.trim();
+        const entity = entityInput.value.trim();
+
+        if (!url || !token || !entity) {
+            emptyEl.style.display = 'block';
+            dataEl.style.display = 'none';
+            loadingEl.style.display = 'none';
+            badgeEl.textContent = 'Not configured';
+            return false;
+        }
+
+        saveConfig(url, token, entity);
+
+        if (showLoading) {
+            loadingEl.style.display = 'block';
+            emptyEl.style.display = 'none';
+            dataEl.style.display = 'none';
+            badgeEl.textContent = 'Connecting...';
+        }
+
+        try {
+            const apiUrl = `${url.replace(/\/+$/, '')}/api/states/${entity}`;
+            const response = await fetch(apiUrl, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                let errMsg = `HTTP ${response.status}`;
+                try { const errData = await response.json(); if (errData.message) errMsg += `: ${errData.message}`; } catch {}
+                throw new Error(errMsg);
+            }
+
+            const data = await response.json();
+
+            // 更新UI
+            badgeEl.textContent = data.entity_id || entity;
+
+            const state = data.state || 'unknown';
+            const stateLower = state.toLowerCase();
+            let dotClass = 'unknown';
+            let stateText = capitalize(state);
+            if (['on','heat','cool','fan_only','dry'].includes(stateLower)) {
+                dotClass = 'on';
+                stateText = capitalize(state);
+            } else if (['off','idle'].includes(stateLower)) {
+                dotClass = 'off';
+                stateText = stateLower === 'idle' ? 'Idle' : 'Off';
+            } else {
+                dotClass = 'unknown';
+                stateText = state || 'Unknown';
+            }
+            stateDisplay.innerHTML = `<span class="status-dot ${dotClass}"></span> ${stateText}`;
+
+            const currentTemp = data.attributes?.current_temperature;
+            tempDisplay.textContent = (currentTemp !== undefined && currentTemp !== null) ? currentTemp : '--';
+
+            const targetTemp = data.attributes?.temperature;
+            targetTempDisplay.textContent = (targetTemp !== undefined && targetTemp !== null) ? targetTemp : '--';
+
+            const fanMode = data.attributes?.fan_mode;
+            fanDisplay.textContent = fanMode ? capitalize(fanMode.replace(/_/g, ' ')) : '--';
+
+            const hvacMode = data.attributes?.hvac_mode || data.state;
+            if (hvacMode && hvacMode !== 'unknown') {
+                const modeMap = { 'cool':'Cooling','heat':'Heating','fan_only':'Fan Only','dry':'Dehumidifying','auto':'Auto','off':'Off' };
+                modeDisplay.textContent = modeMap[hvacMode.toLowerCase()] || capitalize(hvacMode);
+            } else {
+                modeDisplay.textContent = '--';
+            }
+
+            const updated = data.last_updated || data.last_changed;
+            lastUpdatedEl.textContent = `Updated at ${formatTime(updated)}`;
+
+            loadingEl.style.display = 'none';
+            emptyEl.style.display = 'none';
+            dataEl.style.display = 'flex';
+            showConfigStatus(`✅ Connected to ${new URL(url).hostname}`, 'success');
+            return true;
+
+        } catch (error) {
+            console.error('Fetch error:', error);
+            loadingEl.style.display = 'none';
+            emptyEl.style.display = 'none';
+            dataEl.style.display = 'none';
+            badgeEl.textContent = '⚠️ Error';
+            showConfigStatus(`❌ ${error.message || 'Connection failed'}`, 'error');
+            return false;
+        }
+    }
+
+    function saveAndFetch() {
+        const url = urlInput.value.trim();
+        const token = tokenInput.value.trim();
+        const entity = entityInput.value.trim();
+        if (!url || !token || !entity) {
+            showConfigStatus('⚠️ Please fill in all fields.', 'error');
+            return;
+        }
+        try { new URL(url); } catch { showConfigStatus('⚠️ Invalid URL.', 'error'); return; }
+
+        const btn = document.querySelector('.btn-primary');
+        btn.disabled = true;
+        btn.textContent = '⏳ Connecting...';
+        showConfigStatus('⏳ Connecting...', 'info');
+        fetchState(true).finally(() => {
+            btn.disabled = false;
+            btn.textContent = '🔌 Connect';
+            if (!autoRefreshInterval) startAutoRefresh();
+        });
+    }
+
+    function manualRefresh() {
+        const url = urlInput.value.trim();
+        const token = tokenInput.value.trim();
+        const entity = entityInput.value.trim();
+        if (!url || !token || !entity) {
+            showConfigStatus('⚠️ Please configure the connection first.', 'error');
+            return;
+        }
+        fetchState(true);
+    }
+
+    function startAutoRefresh() {
+        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+        autoRefreshInterval = setInterval(() => {
+            if (dataEl.style.display !== 'none' || loadingEl.style.display === 'block') {
+                const url = urlInput.value.trim();
+                const token = tokenInput.value.trim();
+                const entity = entityInput.value.trim();
+                if (url && token && entity) fetchState(false);
+            }
+        }, 15000);
+    }
+
+    // 初始化
+    loadConfig();
+    const url = urlInput.value.trim();
+    const token = tokenInput.value.trim();
+    const entity = entityInput.value.trim();
+    if (url && token && entity) {
+        showConfigStatus('⏳ Auto-connecting...', 'info');
+        fetchState(true).then(() => startAutoRefresh());
+    } else {
+        emptyEl.style.display = 'block';
+        dataEl.style.display = 'none';
+        loadingEl.style.display = 'none';
+        badgeEl.textContent = 'Not configured';
+        showConfigStatus('Enter your token and connect.', 'info');
+    }
+
+    // 暴露全局函数
+    window.saveAndFetch = saveAndFetch;
+    window.manualRefresh = manualRefresh;
+    window.fetchState = fetchState;
+</script>
+</body>
+</html>
