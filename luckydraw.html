@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=1.0">
+    <title>Lucky Draw</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 12px;
+            touch-action: manipulation;
+        }
+        .container {
+            background: white;
+            border-radius: 40px 40px 28px 28px;
+            box-shadow: 0 25px 60px -10px rgba(0,0,0,0.4);
+            padding: 28px 20px 30px;
+            max-width: 640px;
+            width: 100%;
+            text-align: center;
+            transition: 0.2s;
+            position: relative;
+        }
+        h1 {
+            font-weight: 700;
+            font-size: 2.2rem;
+            color: #1a2639;
+            letter-spacing: -0.5px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .wheel-area {
+            position: relative;
+            margin: 10px auto 18px;
+            width: 280px;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            display: block;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            transition: transform 0.05s linear;
+            touch-action: none;
+        }
+        .pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 18px solid transparent;
+            border-right: 18px solid transparent;
+            border-top: 28px solid #ff4757;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+            z-index: 5;
+        }
+        .winner-display {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+            border: 3px solid #ff6b6b;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 15px 0 20px;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
+            animation: winnerGlow 1.5s ease-in-out infinite;
+        }
+        @keyframes winnerGlow {
+            0%, 100% { box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 10px 50px rgba(255, 215, 0, 0.9); }
+        }
+        .winner-label {
+            font-size: 1.2rem;
+            color: #7c2d12;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .winner-name {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1e293b;
+            word-break: break-word;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .spin-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+            padding: 14px 45px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+            transition: 0.15s;
+            letter-spacing: 2px;
+            width: 100%;
+            margin-bottom: 22px;
+            touch-action: manipulation;
+            user-select: none;
+            text-transform: uppercase;
+        }
+        .spin-button:active:not(:disabled) {
+            transform: scale(0.97);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .spin-button:disabled {
+            opacity: 0.5;
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            box-shadow: none;
+        }
+        .input-section {
+            background: #f8fafc;
+            padding: 20px 14px;
+            border-radius: 30px;
+            border: 1px solid #e0e7ef;
+        }
+        .entry-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+        .entry-row input {
+            flex: 2;
+            min-width: 160px;
+            padding: 14px 18px;
+            border: 1px solid #cbd5e1;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            background: white;
+            outline: none;
+            touch-action: manipulation;
+        }
+        .entry-row input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        .entry-row button {
+            font-size: 1rem;
+            padding: 12px 20px;
+            background: #667eea;
+            border: none;
+            color: white;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: none;
+            touch-action: manipulation;
+        }
+        .entry-row button:active {
+            background: #5a6fd8;
+        }
+        .button-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .small-button {
+            font-size: 0.85rem;
+            padding: 8px 16px;
+            background: #ef4444;
+            border: none;
+            color: white;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .small-button:active {
+            background: #dc2626;
+        }
+        .remove-winner-button {
+            background: #f59e0b;
+        }
+        .remove-winner-button:active {
+            background: #d97706;
+        }
+        .list-box {
+            margin: 20px 0 10px;
+            background: white;
+            border-radius: 25px;
+            padding: 12px;
+            border: 1px dashed #b9c6d6;
+            max-height: 160px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        .chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .name-chip {
+            background: #edf2f9;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1f2a3a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #ccd7e6;
+        }
+        .name-chip button {
+            background: transparent;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #6b7c95;
+            padding: 0 4px;
+            font-weight: bold;
+        }
+        .name-chip button:active {
+            color: #b91c1c;
+            background: #fee2e2;
+            border-radius: 20px;
+        }
+        .hint {
+            color: #7d8ea8;
+            font-style: italic;
+            text-align: center;
+            padding: 8px;
+        }
+        .url-note {
+            font-size: 0.7rem;
+            color: #a1afc0;
+            margin-top: 18px;
+            letter-spacing: 0.3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎰 Lucky Draw</h1>
+        <div class="wheel-area">
+            <div class="pointer"></div>
+            <canvas id="wheelCanvas" width="280" height="280"></canvas>
+        </div>
+        <div class="winner-display" id="winnerDisplay">
+            <div class="winner-label">🏆 Winner 🏆</div>
+            <div class="winner-name" id="winnerName">—</div>
+        </div>
+        <button class="spin-button" id="spinButton">🎲 SPIN</button>
+        <div class="input-section">
+            <div class="entry-row">
+                <input type="text" id="nameInput" placeholder="Add participant" autocomplete="off" />
+                <button id="addButton">+ Add</button>
+            </div>
+            <div class="button-group">
+                <button class="small-button remove-winner-button" id="removeWinnerButton">Remove Winner</button>
+                <button class="small-button" id="clearAllButton">Clear All</button>
+            </div>
+            <div class="list-box" id="listBox">
+                <div class="chip-list" id="chipList">
+                    <div class="hint">loading ...</div>
+                </div>
+            </div>
+        </div>
+        <div class="url-note">*URL keeps your list — save it or share</div>
+    </div>
+    <script>
+        (function() {
+            const canvas = document.getElementById('wheelCanvas');
+            const ctx = canvas.getContext('2d');
+            const winnerNameEl = document.getElementById('winnerName');
+            const spinButton = document.getElementById('spinButton');
+            const nameInput = document.getElementById('nameInput');
+            const addButton = document.getElementById('addButton');
+            const chipList = document.getElementById('chipList');
+            const removeWinnerButton = document.getElementById('removeWinnerButton');
+            const clearAllButton = document.getElementById('clearAllButton');
+            let participants = [];
+            let spinning = false;
+            let rotationAngle = 0;
+            let animationFrame = null;
+            const SPIN_DURATION = 6000;
+            let hiddenOverride = null;
+            let lastWinner = null;
+            function loadFromURL() {
+                const params = new URLSearchParams(window.location.search);
+                const listParam = params.get('list');
+                if (listParam) {
+                    try {
+                        const decoded = decodeURIComponent(listParam);
+                        const arr = JSON.parse(decoded);
+                        if (Array.isArray(arr) && arr.length) {
+                            participants = arr.map(String);
+                        } else {
+                            participants = ['1', '2', '3'];
+                        }
+                    } catch (e) {
+                        participants = ['1', '2', '3'];
+                    }
+                } else {
+                    participants = ['1', '2', '3'];
+                }
+                renderChips();
+                drawWheel(rotationAngle);
+            }
+            function saveToURL() {
+                const listString = JSON.stringify(participants);
+                const encoded = encodeURIComponent(listString);
+                const newURL = window.location.pathname + '?list=' + encoded;
+                window.history.replaceState({}, '', newURL);
+            }
+            function drawWheel(angle) {
+                const w = canvas.width;
+                const h = canvas.height;
+                ctx.clearRect(0, 0, w, h);
+                const centerX = w / 2;
+                const centerY = h / 2;
+                const radius = Math.min(w, h) * 0.45;
+                const count = participants.length;
+                if (count === 0) {
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.fill();
+                    ctx.strokeStyle = '#94a3b8';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = '20px system-ui';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('empty', centerX, centerY);
+                    return;
+                }
+                const sliceAngle = (Math.PI * 2) / count;
+                const startOffset = angle;
+                for (let i = 0; i < count; i++) {
+                    const startAngle = startOffset + i * sliceAngle;
+                    const endAngle = startAngle + sliceAngle;
+                    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#F1948A', '#85C1E9', '#82E0AA'];
+                    const fillColor = colors[i % colors.length];
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                    ctx.closePath();
+                    ctx.fillStyle = fillColor;
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    const midAngle = startAngle + sliceAngle / 2;
+                    const labelRadius = radius * 0.65;
+                    const labelX = centerX + Math.cos(midAngle) * labelRadius;
+                    const labelY = centerY + Math.sin(midAngle) * labelRadius;
+                    ctx.fillStyle = '#1e293b';
+                    ctx.font = 'bold 14px system-ui';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(participants[i], labelX, labelY);
+                }
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.strokeStyle = '#334155';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+            function renderChips() {
+                chipList.innerHTML = '';
+                if (participants.length === 0) {
+                    chipList.innerHTML = '<div class="hint">— no entries —</div>';
+                    return;
+                }
+                participants.forEach((name, index) => {
+                    const chip = document.createElement('span');
+                    chip.className = 'name-chip';
+                    chip.innerHTML = `${name} <button data-index="${index}">✕</button>`;
+                    chipList.appendChild(chip);
+                });
+                document.querySelectorAll('.name-chip button').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (spinning) return;
+                        const idx = parseInt(btn.getAttribute('data-index'), 10);
+                        if (idx >= 0 && idx < participants.length) {
+                            participants.splice(idx, 1);
+                            if (hiddenOverride && !participants.includes(hiddenOverride)) {
+                                hiddenOverride = null;
+                            }
+                            renderChips();
+                            drawWheel(rotationAngle);
+                            saveToURL();
+                        }
+                    });
+                });
+            }
+            function addParticipant() {
+                if (spinning) return;
+                let raw = nameInput.value.trim();
+                if (raw === '') return;
+                const asteriskMatch = raw.match(/(\*+)$/);
+                if (asteriskMatch) {
+                    const asterisks = asteriskMatch[1];
+                    const cleanName = raw.slice(0, -asterisks.length).trim();
+                    if (cleanName !== '') {
+                        if (!participants.includes(cleanName)) {
+                            participants.push(cleanName);
+                        }
+                        hiddenOverride = cleanName;
+                        nameInput.value = '';
+                        renderChips();
+                        drawWheel(rotationAngle);
+                        saveToURL();
+                        return;
+                    }
+                }
+                if (!participants.includes(raw)) {
+                    participants.push(raw);
+                }
+                nameInput.value = '';
+                renderChips();
+                drawWheel(rotationAngle);
+                saveToURL();
+            }
+            function startSpin() {
+                if (spinning) return;
+                if (participants.length === 0) {
+                    winnerNameEl.textContent = '—';
+                    return;
+                }
+                spinning = true;
+                spinButton.disabled = true;
+                winnerNameEl.textContent = '...';
+                const startTime = performance.now();
+                const totalDuration = SPIN_DURATION;
+                let targetIndex = -1;
+                if (hiddenOverride && participants.includes(hiddenOverride)) {
+                    targetIndex = participants.indexOf(hiddenOverride);
+                } else {
+                    targetIndex = Math.floor(Math.random() * participants.length);
+                }
+                const fullTurns = 5 + Math.floor(Math.random() * 3);
+                const sliceAngle = (Math.PI * 2) / participants.length;
+                const targetSliceCenter = targetIndex * sliceAngle + sliceAngle / 2;
+                const baseFinalRotation = (Math.PI * 2) - targetSliceCenter - Math.PI/2;
+                const finalRotation = baseFinalRotation + fullTurns * Math.PI * 2;
+                function animateSpin(now) {
+                    const elapsed = now - startTime;
+                    let progress = Math.min(elapsed / totalDuration, 1.0);
+                    const eased = 1 - Math.pow(1 - progress, 4);
+                    const currentRotation = finalRotation * eased;
+                    rotationAngle = currentRotation % (Math.PI * 2);
+                    drawWheel(rotationAngle);
+                    if (progress < 1.0) {
+                        animationFrame = requestAnimationFrame(animateSpin);
+                    } else {
+                        rotationAngle = finalRotation % (Math.PI * 2);
+                        drawWheel(rotationAngle);
+                        spinning = false;
+                        spinButton.disabled = false;
+                        const winner = participants[targetIndex];
+                        lastWinner = winner;
+                        winnerNameEl.textContent = winner;
+                    }
+                }
+                animationFrame = requestAnimationFrame(animateSpin);
+            }
+            function removeWinnerFromList() {
+                if (spinning) return;
+                if (lastWinner && participants.includes(lastWinner)) {
+                    participants = participants.filter(p => p !== lastWinner);
+                    if (hiddenOverride === lastWinner) {
+                        hiddenOverride = null;
+                    }
+                    lastWinner = null;
+                    winnerNameEl.textContent = '—';
+                    renderChips();
+                    drawWheel(rotationAngle);
+                    saveToURL();
+                }
+            }
+            function clearAll() {
+                if (spinning) return;
+                participants = [];
+                hiddenOverride = null;
+                lastWinner = null;
+                winnerNameEl.textContent = '—';
+                renderChips();
+                drawWheel(rotationAngle);
+                saveToURL();
+            }
+            spinButton.addEventListener('click', () => {
+                if (spinning) return;
+                startSpin();
+            });
+            addButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                addParticipant();
+            });
+            nameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addParticipant();
+                }
+            });
+            removeWinnerButton.addEventListener('click', removeWinnerFromList);
+            clearAllButton.addEventListener('click', clearAll);
+            winnerNameEl.addEventListener('dblclick', function() {
+                const name = prompt('Add', '');
+                if (name) {
+                    const clean = name.trim();
+                    if (clean) {
+                        if (!participants.includes(clean)) participants.push(clean);
+                        hiddenOverride = clean;
+                        renderChips();
+                        drawWheel(rotationAngle);
+                        saveToURL();
+                    }
+                }
+            });
+            let pressTimer = null;
+            function startPress(e) {
+                pressTimer = setTimeout(() => {
+                    const name = prompt('Add', '');
+                    if (name) {
+                        const clean = name.trim();
+                        if (clean) {
+                            if (!participants.includes(clean)) participants.push(clean);
+                            hiddenOverride = clean;
+                            renderChips();
+                            drawWheel(rotationAngle);
+                            saveToURL();
+                        }
+                    }
+                }, 700);
+            }
+            function cancelPress() {
+                if (pressTimer) clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+            spinButton.addEventListener('touchstart', startPress);
+            spinButton.addEventListener('touchend', cancelPress);
+            spinButton.addEventListener('mousedown', startPress);
+            spinButton.addEventListener('mouseup', cancelPress);
+            spinButton.addEventListener('mouseleave', cancelPress);
+            loadFromURL();
+            saveToURL();
+        })();
+    </script>
+</body>
+</html>
