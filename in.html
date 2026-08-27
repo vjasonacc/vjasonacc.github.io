@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jason 的散水餅小站 🍪</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 動畫定義 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { transform: scale(1.08); }
+            70% { transform: scale(0.92); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes spinFast {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px) rotate(-1deg); }
+            40% { transform: translateX(6px) rotate(1deg); }
+            60% { transform: translateX(-4px) rotate(-0.5deg); }
+            80% { transform: translateX(4px) rotate(0.5deg); }
+        }
+        @keyframes glow {
+            0% { opacity: 0; transform: scale(0.7); }
+            50% { opacity: 0.5; }
+            100% { opacity: 0; transform: scale(1.4); }
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.5); }
+            60% { transform: scale(1.15); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .float-animation { animation: float 3s ease-in-out infinite; }
+        .bounce-in { animation: bounceIn 0.7s ease-out forwards; }
+        .spin-fast { animation: spinFast 0.15s linear infinite; }
+        .shake { animation: shake 0.3s ease-in-out; }
+        .glow-effect {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: radial-gradient(circle, rgba(255,200,100,0.8) 0%, transparent 70%);
+            animation: glow 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+        .pop-in { animation: popIn 0.4s ease-out forwards; }
+
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-hover { transition: all 0.2s ease; }
+        .btn-hover:hover {
+            transform: scale(1.04);
+            box-shadow: 0 12px 28px rgba(251, 146, 60, 0.4);
+        }
+        .btn-hover:active { transform: scale(0.96); }
+
+        .collection-item {
+            transition: all 0.3s ease;
+            filter: grayscale(100%);
+            opacity: 0.4;
+        }
+        .collection-item.unlocked {
+            filter: grayscale(0%);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-amber-50 via-white to-orange-50 min-h-screen font-sans text-gray-800">
+
+    <!-- 頂部歡迎區 -->
+    <header class="py-8 px-6 text-center relative overflow-hidden">
+        <div class="absolute top-6 left-8 text-3xl float-animation" style="animation-delay: 0s;">🥐</div>
+        <div class="absolute top-10 right-12 text-2xl float-animation" style="animation-delay: 0.6s;">🍪</div>
+        <div class="absolute bottom-2 left-16 text-3xl float-animation" style="animation-delay: 1.1s;">🧁</div>
+        <div class="absolute bottom-6 right-8 text-3xl float-animation" style="animation-delay: 1.6s;">🥮</div>
+
+        <div class="fade-in-up">
+            <h1 class="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
+                再見啦各位 👋
+            </h1>
+            <p id="greeting" class="text-xl md:text-2xl font-medium text-gray-700 mb-2">Dear all,</p>
+            <p class="text-gray-600 mb-3">
+                我係實習生 Jason · 今日最後一日 · 請大家食虛擬散水餅～
+            </p>
+            <div class="text-4xl space-x-1">🍰🥧🥮🍩</div>
+        </div>
+    </header>
+
+    <!-- 主內容兩欄式 -->
+    <main class="max-w-5xl mx-auto px-6 pb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-7">
+            
+            <!-- 左：抽獎區 + 收集冊 -->
+            <div class="fade-in-up" style="transition-delay: 0.1s;">
+                <div class="bg-white rounded-3xl shadow-xl p-6 card-hover h-full">
+                    <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">🎰 幸運抽散水餅</h2>
+                    
+                    <!-- 抽獎結果區 -->
+                    <div id="draw-result" class="relative h-40 flex flex-col items-center justify-center mb-4 border-2 border-dashed border-amber-200 rounded-2xl bg-amber-50/50 overflow-hidden">
+                        <div class="text-5xl mb-2">❓</div>
+                        <p class="text-gray-500 text-sm">點擊下面按鈕開始抽餅</p>
+                    </div>
+
+                    <!-- 按鈕 + 計數器 -->
+                    <button id="draw-btn" class="w-full py-3.5 bg-gradient-to-r from-orange-400 to-amber-500 text-white font-bold rounded-2xl btn-hover shadow-lg mb-4">
+                        立即抽餅 🎲
+                    </button>
+                    <p class="text-center text-sm text-gray-500 mb-5">
+                        已抽 <span id="draw-count" class="font-bold text-orange-500">0</span> 次
+                    </p>
+
+                    <!-- 收集冊 -->
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-700 mb-3 text-center">📦 散水餅收集冊</h3>
+                        <div id="collection" class="grid grid-cols-4 gap-2">
+                            <!-- JS 動態生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右：截圖紀念卡 -->
+            <div class="fade-in-up" style="transition-delay: 0.2s;">
+                <div id="memory-card" class="bg-gradient-to-br from-orange-50 to-amber-100 rounded-3xl shadow-xl p-6 border-4 border-white card-hover h-full">
+                    <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">📸 截圖留念</h2>
+                    
+                    <div class="text-center">
+                        <div id="final-cookie" class="text-5xl mb-3">💛</div>
+                        <p id="memory-greeting" class="text-xl font-bold text-gray-800 mb-3">Dear all,</p>
+                        <p id="final-msg" class="text-gray-700 leading-relaxed mb-4 text-sm">
+                            多謝大家呢段時間嘅照顧同指導<br>
+                            實習期間學到好多嘢，真係好多謝各位！<br>
+                            祝大家工作順利，身體健康，事事如意✨
+                        </p>
+                        <div class="border-t border-amber-200 pt-4">
+                            <p class="text-right text-gray-600 text-sm">
+                                實習生 Jason 敬上<br>
+                                <span class="text-xs text-gray-500" id="today-date"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 頁尾 -->
+    <footer class="py-4 text-center text-gray-500 text-xs">
+        <p class="fade-in-up">Made with ❤️ by Jason · 散水餅紀念</p>
+    </footer>
+
+    <script>
+        // 1. URL Query 參數
+        const urlParams = new URLSearchParams(window.location.search);
+        const userName = urlParams.get('name') || 'all';
+        const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);
+        document.getElementById('greeting').textContent = `Dear ${displayName},`;
+        document.getElementById('memory-greeting').textContent = `Dear ${displayName},`;
+
+        // 2. 今日日期
+        const today = new Date();
+        document.getElementById('today-date').textContent = 
+            `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
+
+        // 3. 散水餅資料庫
+        const cookies = [
+            { id: 0, emoji: '🥮', name: '經典蓮蓉月餅', msg: '祝你事事圓滿，前路順遂，萬事如意！' },
+            { id: 1, emoji: '🍰', name: '濃厚芝士蛋糕', msg: '願你每日都甜絲絲，工作輕鬆無壓力！' },
+            { id: 2, emoji: '🥐', name: '金黃牛油可頌', msg: '願你實力鬆脆，層層進步，升職加薪！' },
+            { id: 3, emoji: '🍪', name: '朱古力碎曲奇', msg: '細水長流，好運常伴左右，驚喜不斷！' },
+            { id: 4, emoji: '🧁', name: '雲呢拿杯子蛋糕', msg: '滿滿驚喜，日日都有新鮮事，開心每一天！' },
+            { id: 5, emoji: '🥧', name: '酥皮蛋撻', msg: '撐起自己，發光發熱，前途無可限量！' },
+            { id: 6, emoji: '🍩', name: '糖霜冬甩', msg: '生活甜甜圓圓，煩惱全部走開！' },
+            { id: 7, emoji: '🥯', name: '芝麻貝果', msg: '踏實前行，收穫滿滿，一切都如你所願！' }
+        ];
+
+        // 4. 隨機運勢
+        const fortunes = [
+            '🌟 今日運勢：大吉，樣樣順心！',
+            '✨ 今日運勢：有驚喜，等住你！',
+            '💼 今日運勢：貴人相助，事事順利',
+            '💰 今日運勢：財運旺旺，好事連連',
+            '😊 今日運勢：心情靚靚，笑口常開',
+            '🐟 今日運勢：工作輕鬆，摸魚成功',
+            '🤝 今日運勢：人緣爆燈，廣結善緣',
+            '🎯 今日運勢：心想事成，願望達成'
+        ];
+
+        // 5. 狀態變量
+        let drawCount = 0;
+        let unlocked = new Set();
+        const drawBtn = document.getElementById('draw-btn');
+        const drawResult = document.getElementById('draw-result');
+        const drawCountEl = document.getElementById('draw-count');
+        const collectionEl = document.getElementById('collection');
+        const finalCookieEl = document.getElementById('final-cookie');
+        const finalMsgEl = document.getElementById('final-msg');
+
+        // 初始化收集冊
+        function renderCollection() {
+            collectionEl.innerHTML = cookies.map(cookie => `
+                <div class="collection-item ${unlocked.has(cookie.id) ? 'unlocked pop-in' : ''} 
+                            flex flex-col items-center p-2 rounded-xl bg-amber-50 text-center">
+                    <span class="text-2xl">${cookie.emoji}</span>
+                    <span class="text-xs text-gray-600 mt-1">${cookie.name.slice(0,4)}</span>
+                </div>
+            `).join('');
+        }
+        renderCollection();
+
+        // 6. 抽獎邏輯（可無限次）
+        drawBtn.addEventListener('click', () => {
+            drawBtn.disabled = true;
+            drawBtn.textContent = '抽獎中... 🎲';
+            drawResult.classList.add('shake');
+
+            // 快速轉動動畫
+            let count = 0;
+            const spin = setInterval(() => {
+                const random = cookies[Math.floor(Math.random() * cookies.length)];
+                drawResult.innerHTML = `
+                    <div class="text-5xl mb-2 spin-fast">${random.emoji}</div>
+                    <p class="text-gray-500 text-sm">轉緊...</p>
+                `;
+                count++;
+                if (count > 15) {
+                    clearInterval(spin);
+                    drawResult.classList.remove('shake');
+                    
+                    // 最終結果
+                    const final = cookies[Math.floor(Math.random() * cookies.length)];
+                    const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+                    
+                    // 解鎖收集
+                    unlocked.add(final.id);
+                    drawCount++;
+                    drawCountEl.textContent = drawCount;
+                    renderCollection();
+
+                    // 顯示結果 + 閃光
+                    drawResult.innerHTML = `
+                        <div class="glow-effect"></div>
+                        <div class="text-5xl mb-2 bounce-in">${final.emoji}</div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-1 bounce-in" style="animation-delay: 0.15s;">${final.name}</h3>
+                        <p class="text-gray-600 text-xs bounce-in" style="animation-delay: 0.3s;">${fortune}</p>
+                    `;
+
+                    // 同步到紀念卡
+                    finalCookieEl.textContent = final.emoji;
+                    finalCookieEl.classList.add('bounce-in');
+                    setTimeout(() => finalCookieEl.classList.remove('bounce-in'), 700);
+                    finalMsgEl.innerHTML = `${final.msg}<br><br>多謝大家呢段時間嘅照顧同指導<br>祝大家一切順利✨`;
+
+                    // 重置按鈕
+                    setTimeout(() => {
+                        drawBtn.disabled = false;
+                        drawBtn.textContent = '再抽一次 🎲';
+                    }, 800);
+                }
+            }, 80);
+        });
+
+        // 7. 進入動畫
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
+        window.addEventListener('load', () => document.querySelector('.fade-in-up').classList.add('visible'));
+    </script>
+</body>
+</html>
